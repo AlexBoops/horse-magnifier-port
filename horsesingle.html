@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+		<title>Horse Magnifier: The Full Webed Horse</title>
+
+		<meta name="description" content="do you believe horses have souls?">
+
+		<meta property="og:type" content="website">
+		<meta property="og:site_name" content="Horse Magnifier">
+		<meta property="og:url" content="https://horsemagnifierweb.vercel.app/">
+		<meta property="og:title" content="Horse Magnifier: The Full Webed Horse">
+		<meta property="og:description" content="do you believe horses have souls?">
+		<meta property="og:image" content="https://cdn.jsdelivr.net/gh/AlexBoops/horse-magnifier-port@aa20cfc/index.png">
+
+		<meta name="twitter:card" content="summary_large_image">
+		<meta name="twitter:title" content="Horse Magnifier: The Full Webed Horse">
+		<meta name="twitter:description" content="do you believe horses have souls?">
+		<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/AlexBoops/horse-magnifier-port@aa20cfc/index.png">
+
+		<!-- Favicons pointed to repository files -->
+		<link id="-gd-engine-icon" rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/AlexBoops/horse-magnifier-port@aa20cfc/index.icon.png" />
+		<link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/AlexBoops/horse-magnifier-port@aa20cfc/index.144x144.png"/>
+		<link rel="manifest" href="https://cdn.jsdelivr.net/gh/AlexBoops/horse-magnifier-port@aa20cfc/index.manifest.json">
+
+		<style>
+			html, body, #canvas {
+				margin: 0;
+				padding: 0;
+				border: 0;
+			}
+
+			body {
+				color: white;
+				background-color: black;
+				overflow: hidden;
+				touch-action: none;
+			}
+
+			#canvas {
+				display: block;
+				width: 100vw;
+				height: 100vh;
+				position: absolute;
+				top: 0;
+				left: 0;
+			}
+
+			#canvas:focus {
+				outline: none;
+			}
+
+			#status, #status-splash, #status-progress {
+				position: absolute;
+				left: 0;
+				right: 0;
+			}
+
+			#status, #status-splash {
+				top: 0;
+				bottom: 0;
+			}
+
+			#status {
+				background-color: #242424;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+				visibility: visible;
+				z-index: 10;
+			}
+
+			#status-splash {
+				max-height: 100%;
+				max-width: 100%;
+				margin: auto;
+			}
+
+			#status-splash.fullsize--true {
+				height: 100%;
+				width: 100%;
+				object-fit: contain;
+			}
+
+			#status-splash.use-filter--true {
+				image-rendering: auto;
+			}
+
+			#status-progress, #status-notice {
+				display: none;
+			}
+
+			#status-progress {
+				bottom: 10%;
+				width: 50%;
+				margin: 0 auto;
+			}
+
+			#status-notice {
+				background-color: #5b3943;
+				border-radius: 0.5rem;
+				border: 1px solid #9b3943;
+				color: #e0e0e0;
+				font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
+				line-height: 1.3;
+				margin: 0 2rem;
+				overflow: hidden;
+				padding: 1rem;
+				text-align: center;
+				z-index: 11;
+			}
+
+			#cloakBtn {
+				position: fixed;
+				top: 14px;
+				left: 14px;
+				background: rgba(20, 20, 20, 0.85);
+				color: #eee7de;
+				border: 1px solid #d97736;
+				padding: 8px 14px;
+				border-radius: 4px;
+				font-family: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
+				font-size: 11px;
+				font-weight: 700;
+				letter-spacing: 0.05em;
+				text-transform: uppercase;
+				cursor: pointer;
+				z-index: 10000;
+				backdrop-filter: blur(4px);
+				transition: background 0.2s, transform 0.1s;
+			}
+
+			#cloakBtn:hover {
+				background: #d97736;
+				color: #fff;
+				transform: translateY(-1px);
+			}
+		</style>
+	</head>
+	<body>
+		<button id="cloakBtn">about:blank</button>
+
+		<canvas id="canvas">
+			Your browser does not support the canvas tag.
+		</canvas>
+
+		<noscript>
+			Your browser does not support JavaScript.
+		</noscript>
+
+		<div id="status">
+			<!-- Explicit visible splash image -->
+			<img id="status-splash" class="fullsize--true use-filter--true" src="https://cdn.jsdelivr.net/gh/AlexBoops/horse-magnifier-port@aa20cfc/index.png" alt="Loading...">
+			<progress id="status-progress"></progress>
+			<div id="status-notice"></div>
+		</div>
+
+		<script>
+			window.CDN_COMMIT = 'aa20cfc';
+			window.CDN_BASE = 'https://cdn.jsdelivr.net/gh/AlexBoops/horse-magnifier-port@' + window.CDN_COMMIT + '/';
+
+			const cloakBtn = document.getElementById("cloakBtn");
+			cloakBtn.addEventListener("click", () => {
+				const currentUrl = window.location.href;
+				const win = window.open("about:blank", "_blank");
+				if (!win) {
+					alert("Popup blocked. Please allow popups for this site.");
+					return;
+				}
+				const frameHtml = `<!DOCTYPE html><html><head><title>Horse Magnifier: The Full Webed Horse</title><style>html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000;}iframe{border:0;width:100%;height:100%;display:block;}</style></head><body><iframe src="${currentUrl}" allowfullscreen></iframe></body></html>`;
+				win.document.open();
+				win.document.write(frameHtml);
+				win.document.close();
+				if (cloakBtn) cloakBtn.remove();
+			});
+
+			const statusOverlay = document.getElementById('status');
+			const statusProgress = document.getElementById('status-progress');
+			const statusNotice = document.getElementById('status-notice');
+
+			let initializing = true;
+			let statusMode = '';
+
+			function setStatusMode(mode) {
+				if (statusMode === mode || !initializing) {
+					return;
+				}
+				if (mode === 'hidden') {
+					statusOverlay.remove();
+					// Remove the about:blank button once initialization completes
+					const btn = document.getElementById('cloakBtn');
+					if (btn) btn.remove();
+					initializing = false;
+					return;
+				}
+				statusOverlay.style.visibility = 'visible';
+				statusProgress.style.display = mode === 'progress' ? 'block' : 'none';
+				statusNotice.style.display = mode === 'notice' ? 'block' : 'none';
+				statusMode = mode;
+			}
+
+			function setStatusNotice(text) {
+				while (statusNotice.lastChild) {
+					statusNotice.removeChild(statusNotice.lastChild);
+				}
+				const lines = text.split('\n');
+				lines.forEach((line) => {
+					statusNotice.appendChild(document.createTextNode(line));
+					statusNotice.appendChild(document.createElement('br'));
+				});
+			}
+
+			function displayFailureNotice(err) {
+				console.error(err);
+				if (err instanceof Error) {
+					setStatusNotice(err.message);
+				} else if (typeof err === 'string') {
+					setStatusNotice(err);
+				} else {
+					setStatusNotice('An unknown error occurred.');
+				}
+				setStatusMode('notice');
+				initializing = false;
+			}
+
+			const origFetch = window.fetch.bind(window);
+
+			async function fetchChunkPart(baseName, partIdx) {
+				const pad4 = String(partIdx).padStart(4, '0');
+				const path = window.CDN_BASE + `${baseName}.part${pad4}`;
+				const res = await origFetch(path, { credentials: 'omit', mode: 'cors' });
+				if (!res.ok) throw new Error(`HTTP ${res.status} reading ${baseName}.part${pad4}`);
+				return await res.arrayBuffer();
+			}
+
+			const g_blobUrls = {};
+			async function assembleToBlobUrl(baseName, totalParts, mimeType) {
+				if (g_blobUrls[baseName]) return g_blobUrls[baseName];
+
+				const buffers = [];
+				let totalLen = 0;
+				for (let i = 1; i <= totalParts; i++) {
+					const buf = await fetchChunkPart(baseName, i);
+					buffers.push(buf);
+					totalLen += buf.byteLength;
+				}
+
+				const combined = new Uint8Array(totalLen);
+				let offset = 0;
+				for (let i = 0; i < buffers.length; i++) {
+					combined.set(new Uint8Array(buffers[i]), offset);
+					offset += buffers[i].byteLength;
+					buffers[i] = null;
+				}
+
+				if (baseName === 'index.pck') {
+					const enc = new TextEncoder();
+					const searchBytes = enc.encode('res://addons/godotsteam/godotsteam.gdextension');
+					for (let i = 0; i <= combined.length - searchBytes.length; i++) {
+						let match = true;
+						for (let j = 0; j < searchBytes.length; j++) {
+							if (combined[i + j] !== searchBytes[j]) { match = false; break; }
+						}
+						if (match) {
+							combined.fill(0x0A, i, i + searchBytes.length);
+							console.log('[Optic Patch] Erased steam extension entry at offset', i);
+						}
+					}
+				}
+
+				const blob = new Blob([combined], { type: mimeType });
+				const url = URL.createObjectURL(blob);
+				g_blobUrls[baseName] = url;
+				return url;
+			}
+
+			function resolveCdnUrl(rawUrl) {
+				if (!rawUrl) return rawUrl;
+				let url = (typeof rawUrl === 'string') ? rawUrl : (rawUrl.url || '');
+				if (url.startsWith('blob:') || url.startsWith('data:') || url.startsWith('https://cdn.jsdelivr.net/')) {
+					return url;
+				}
+				if (url.includes('godot.web.template_release.wasm32.nothreads.dlink.wasm') || url.endsWith('index.wasm')) {
+					return window.CDN_BASE + 'index.wasm';
+				}
+				if (url.includes('godot_rapier.wasm')) {
+					return window.CDN_BASE + 'godot_rapier.wasm';
+				}
+				if (url.includes('index.audio.worklet.js')) {
+					return window.CDN_BASE + 'index.audio.worklet.js';
+				}
+				if (url.includes('index.audio.position.worklet.js')) {
+					return window.CDN_BASE + 'index.audio.position.worklet.js';
+				}
+				if (url.startsWith(window.location.origin)) {
+					url = url.substring(window.location.origin.length);
+				}
+				url = url.replace(/^https?:\/\/[^\/]+/, '');
+				url = url.replace(/^\/?gh\/AlexBoops\/horse-magnifier-port@[^\/]+\//, '');
+				url = url.replace(/^\/?AlexBoops\/horse-magnifier-port\/(?:[^\/]+\/)?/, '');
+				return window.CDN_BASE + url.replace(/^\.?\//, '').split('?')[0];
+			}
+
+			window.fetch = async function(input, init) {
+				let url = (typeof input === 'string') ? input : (input && input.url) ? input.url : '';
+				
+				if (url.includes('index.pck') && g_blobUrls['index.pck']) {
+					return origFetch(g_blobUrls['index.pck']);
+				}
+				if (url.includes('index.side.wasm') && g_blobUrls['index.side.wasm']) {
+					return origFetch(g_blobUrls['index.side.wasm']);
+				}
+
+				let resolved = resolveCdnUrl(url);
+				let safeInit = Object.assign({}, init);
+				if (safeInit.credentials === 'same-origin' && resolved.startsWith('http')) {
+					safeInit.credentials = 'omit';
+					safeInit.mode = 'cors';
+				}
+
+				const res = await origFetch(resolved || input, safeInit);
+				if (resolved.endsWith('.wasm') && res.ok) {
+					const buf = await res.arrayBuffer();
+					return new Response(buf, {
+						status: res.status,
+						statusText: res.statusText,
+						headers: {
+							'Content-Type': 'application/wasm',
+							'Content-Length': buf.byteLength.toString()
+						}
+					});
+				}
+				return res;
+			};
+
+			(async function boot() {
+				try {
+					setStatusMode('progress');
+
+					const sideBlobUrl = await assembleToBlobUrl('index.side.wasm', 3, 'application/wasm');
+					const pckBlobUrl = await assembleToBlobUrl('index.pck', 3, 'application/octet-stream');
+
+					const res = await origFetch(window.CDN_BASE + 'index.js', { credentials: 'omit', mode: 'cors' });
+					if (!res.ok) throw new Error(`HTTP ${res.status} fetching index.js`);
+					let scriptText = await res.text();
+
+					scriptText = scriptText.replace('godot.web.template_release.wasm32.nothreads.dlink.wasm', 'index.wasm');
+					scriptText = scriptText.replaceAll('credentials:"same-origin"', 'credentials:"omit"');
+
+					const blob = new Blob([scriptText], { type: 'application/javascript' });
+					const s = document.createElement('script');
+					s.src = URL.createObjectURL(blob);
+					s.onload = () => initEngine(pckBlobUrl, sideBlobUrl);
+					document.head.appendChild(s);
+				} catch (err) {
+					displayFailureNotice(err);
+				}
+			})();
+
+			function initEngine(pckUrl, sideWasmUrl) {
+				const GODOT_CONFIG = {
+					"args": [],
+					"canvasResizePolicy": 2,
+					"emscriptenPoolSize": 8,
+					"ensureCrossOriginIsolationHeaders": false,
+					"executable": window.CDN_BASE + "index",
+					"experimentalVK": false,
+					"fileSizes": {
+						"index.wasm": 1508095
+					},
+					"focusCanvas": true,
+					"gdextensionLibs": [
+						window.CDN_BASE + "godot_rapier.wasm",
+						sideWasmUrl
+					],
+					"godotPoolSize": 4,
+					"mainPack": pckUrl,
+					"locateFile": (file) => {
+						if (file.includes('index.pck')) return pckUrl;
+						if (file.includes('index.side.wasm')) return sideWasmUrl;
+						return resolveCdnUrl(file);
+					}
+				};
+
+				const engine = new Engine(GODOT_CONFIG);
+
+				const unlockAudio = async () => {
+					const AudioCtx = window.AudioContext || window.webkitAudioContext;
+					if (AudioCtx) {
+						try {
+							const ctx = new AudioCtx();
+							if (ctx.state === 'suspended') await ctx.resume();
+						} catch(e) {}
+					}
+				};
+
+				window.addEventListener('click', unlockAudio, { once: true });
+				window.addEventListener('keydown', unlockAudio, { once: true });
+
+				engine.startGame({
+					'onProgress': function (current, total) {
+						if (current > 0 && total > 0) {
+							statusProgress.value = current;
+							statusProgress.max = total;
+						} else {
+							statusProgress.removeAttribute('value');
+							statusProgress.removeAttribute('max');
+						}
+					},
+				}).then(() => {
+					setStatusMode('hidden');
+					const canvas = document.getElementById('canvas');
+					if (canvas) canvas.focus();
+				}, displayFailureNotice);
+			}
+		</script>
+	</body>
+</html>
